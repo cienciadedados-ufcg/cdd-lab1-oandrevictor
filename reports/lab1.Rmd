@@ -1,0 +1,67 @@
+---
+title: "Lab1"
+author: "André Victor de Andrade Lopes"
+date: "23 de abril de 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(here)
+library(ggplot2)
+
+theme_set(theme_bw())
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+dados = read_csv(here("data/series_from_imdb.csv"), 
+                    progress = FALSE,
+                    col_types = cols(series_name = col_character(), 
+                                     episode = col_character(), 
+                                     url = col_character(),
+                                     season = col_character())) 
+
+series = unique(subset(dados, select=c("series_name")))
+
+#13 Reasons Why
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+info_series <- dados %>% filter(series_name %in% c("How to Get Away with Murder", "Scandal"))
+
+basic_statistic <- dados %>%
+        group_by(series_name) %>%
+        summarise(mediana = median(user_rating),
+                  media = mean(user_rating),
+                  maximo = max(user_rating),
+                  minimo = min(user_rating))
+
+shonda_land_s1<- info_series%>% filter(season == 1)
+shonda_land_s2<- info_series%>% filter(season == 2)
+
+
+ggplot(data=info_series, aes(x=season_ep, y=user_rating, group=series_name, color=series_name)) +
+    geom_line()+
+    geom_point() +
+    facet_wrap(~ season)
+
+p10 <- ggplot(info_series, aes(x = series_name, y = user_rating, color= series_name)) +
+        geom_boxplot() + geom_jitter(position = position_jitter(w = 0.4, h = 0)) + scale_color_manual(values=c("#ed3d51", "#5080ef", "#56B4E9"))
+p10
+
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
