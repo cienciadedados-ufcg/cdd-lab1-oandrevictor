@@ -58,7 +58,7 @@ ggplot(data=info_series, aes(x=season_ep, y=user_rating, group=series_name, colo
     facet_wrap(~ season)
 
 p10 <- ggplot(info_series, aes(x = series_name, y = user_rating, color= series_name)) +
-        geom_boxplot() + geom_jitter(position = position_jitter(w = 0.4, h = 0)) + scale_color_manual(values=c("#ed3d51", "#5080ef", "#56B4E9"))
+        geom_boxplot() + geom_jitter(position = position_jitter(w = 0.4, h = 0)) + scale_color_manual(values=c("#ef6a65", "#93d2c7"))
 p10
 
 
