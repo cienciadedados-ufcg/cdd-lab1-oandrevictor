@@ -70,13 +70,13 @@ Shondaland é uma produtora americana que é responsável pelas séries Grey's A
 
 shondaland <- dados %>% filter(series_name %in% c("How to Get Away with Murder", "Scandal"))
 
-basic_statistic <- dados %>%
-        group_by(series_name) %>%
-        summarise(mediana = median(user_rating),
-                  media = mean(user_rating),
-                  maximo = max(user_rating),
-                  minimo = min(user_rating))
-
+basic_statistic = shondaland %>%
+    group_by(season, series_name) %>%
+    summarize(variance = var(user_rating),
+              max =max(user_rating),
+              min = min(user_rating),
+              average = mean(user_rating),
+              sd = sd(user_rating))
 
 ```
 
@@ -119,20 +119,22 @@ Assim, para How to Get Away with Murder os melhores episódios são os <b>mid-se
 <center>
 ![image2](scandal.png)
 </center>
+###Onde estão os melhores episódios? Inicio meio ou fim da temporada?
 Já em Scandal, temos um comportamento diferente:
 ```{r}
 scandal = shondaland %>% filter(series_name %in% c("Scandal"))
-ggplot(data=scandal, aes(x=season_ep, y=user_rating, group=series_name, color=series_name)) +
+ggplot(data=scandal, aes(x=season_ep,
+                         y=user_rating,
+                         group=series_name,
+                         color=series_name)) +
     geom_line()+
     geom_point() +
-    facet_wrap(~ season)
-
-basic_statistic = shondaland %>%
-    group_by(season, series_name) %>%
-    summarize(variance = var(user_rating), max =max(user_rating), min = min(user_rating), average = mean(user_rating), sd = sd(user_rating))
-
+    facet_wrap(~ season) +
+    guides(color=FALSE)  + 
+    labs(x = "Episódio",
+         y = "Avaliação no IMDB") +
+    ggtitle("Avaliação do episódio por temporada")
 ```
-###Onde estão os melhores episódios? Inicio meio ou fim da temporada?
 A primeira temporada apresenta um progressão linear positiva ao longo da temporada, já na segunda, terceira e quarta temporada temos essa progressão apenas no final da temporada (a partir do episódio 15). <br />
 Nas três primeiras temporadas, o ultimo episódio sempre tem a maior avaliação. A partir da quarta temporada, a maior avaliação aparece arbitrariamente ao longo da tempodada (episódio 6, episódio 4 e 17), já na sexta temporada, o primeiro episódio é um dos que apresente maior média.
 
