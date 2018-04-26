@@ -70,29 +70,24 @@ Considerando: Primeiro episódio, Meio e final da temporada, temos:
 htgawm = shondaland %>% filter(series_name %in% c("How to Get Away with Murder"))
 ggplot(data=htgawm, aes(x=season_ep, y=user_rating, group=series_name, color=series_name)) +
     geom_line()+
-    geom_point() +
+    geom_point() + 
     facet_wrap(~ season)
 ```
 
+#Episódios Sem Graça
 ```{r}
-df1 <- melt(shondaland,"Row.names")
+shonda_nah <- shondaland %>% 
+                mutate(nah = r4*100 + r5*100 + r6*100 + r7 *100)
+scandal_nah <- shonda_nah %>% filter(series_name %in% c("How to Get Away with Murder"))
 
-g1 <- ggplot(shondaland, aes(x = Row.names, y=value)) +
-  geom_bar(aes(fill=season),stat="identity", position ="dodge") + 
-  theme_bw()+ 
-  theme(axis.text.x = element_text(angle=-40, hjust=.1))
-g1
+ggplot(scandal_nah, aes(season_ep, nah, col=season, fill=season)) + 
+        geom_bar(width=0.4, stat="identity") +
+        geom_text(aes(label=sprintf("%0.2f", round(nah, digits = 2))),hjust=0.5, vjust=-0.5, size= 3,  color="#000000") +
+        theme(text = element_text(size = 10)) + 
+        theme(axis.text = element_text(size = 10)) +  theme(axis.title = element_text(size = 20)) +
+        facet_grid( ~ season) 
+    
 
-library(ggplot2)
-library(reshape2)
-shonda <- shondaland %>% select(season_ep, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10)
-d <- melt(shonda, id.vars="season_ep")
-d$value <- as.numeric(as.character(d$value))*10
-
-
-# Everything on the same plot
-ggplot(d, aes(season_ep,value, col=variable, fill=variable)) + 
-  geom_bar(stat="identity") +scale_y_continuous()
 ```
 
 #Scandal
