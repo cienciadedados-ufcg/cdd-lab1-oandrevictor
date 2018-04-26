@@ -11,15 +11,14 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(here)
 library(ggplot2)
+require(reshape2)
 
 theme_set(theme_bw())
 ```
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+#Preparando os Dados
+A primeira parte é construir um data frame com os dados que foram obtidos e estão disponíveis em csv (data/series_from_imdb.csv).
+Em seguida foram extraidos os nomes das séries e quantidade de episódios cujos dados estão disponível.
 
 ```{r cars}
 dados = read_csv(here("data/series_from_imdb.csv"), 
@@ -30,16 +29,19 @@ dados = read_csv(here("data/series_from_imdb.csv"),
                                      season = col_character())) 
 
 series = unique(subset(dados, select=c("series_name")))
+series_ = dados %>%
+            group_by(series_name) %>%
+            summarise(n = n())
 
-#13 Reasons Why
 ```
 
-## Including Plots
+## Shondaland
 
-You can also embed plots, for example:
+Shondaland é uma produtora americana que é responsável pelas séries Grey's Anatomy, Scandal, How To Get Away With Murder e outras. As três séries são exibidas no canal aberto ABC no mesmo dia da semana (Quinta-Feira) a noite. A análise será feita levando em consideração Scandal e How To Get Away With Murder.
+
 
 ```{r pressure, echo=FALSE}
-info_series <- dados %>% filter(series_name %in% c("How to Get Away with Murder", "Scandal"))
+shondaland <- dados %>% filter(series_name %in% c("How to Get Away with Murder", "Scandal"))
 
 basic_statistic <- dados %>%
         group_by(series_name) %>%
@@ -48,11 +50,7 @@ basic_statistic <- dados %>%
                   maximo = max(user_rating),
                   minimo = min(user_rating))
 
-shonda_land_s1<- info_series%>% filter(season == 1)
-shonda_land_s2<- info_series%>% filter(season == 2)
-
-
-ggplot(data=info_series, aes(x=season_ep, y=user_rating, group=series_name, color=series_name)) +
+ggplot(data=shondaland, aes(x=season_ep, y=user_rating, group=series_name, color=series_name)) +
     geom_line()+
     geom_point() +
     facet_wrap(~ season)
@@ -64,4 +62,55 @@ p10
 
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+Primeiro vamos analisar How To Get Away With Murder. O gráfico de linhas abaixo nos ajuda a compreender como a série se comporta de forma parecida nas três temporadas: Na primeira parte da série (exibida entre setembro e dezembro) os episódios apresentam uma média que varia entre 8 e 9, até chegar no mid-season que é o episódio com maior média de avaliação na temporada, este é o episódio que divide o plot da história. Nele, acontecem algumas revelações sobre os mistérios que foram apresentados na série até então. Além de apresentar o gancho para a segunda parte da temporada. Depois disso, a temporada segue um progressão crescendo tendo o seu segundo pico na season finale (episódio do final da temporada).
+Considerando: Primeiro episódio, Meio e final da temporada, temos:
+#1: Meio (9.4, 9.6, 9.6)
+#2 final (9.4, 9.2, 9.1)
+```{r}
+htgawm = shondaland %>% filter(series_name %in% c("How to Get Away with Murder"))
+ggplot(data=htgawm, aes(x=season_ep, y=user_rating, group=series_name, color=series_name)) +
+    geom_line()+
+    geom_point() +
+    facet_wrap(~ season)
+```
+
+```{r}
+df1 <- melt(shondaland,"Row.names")
+
+g1 <- ggplot(shondaland, aes(x = Row.names, y=value)) +
+  geom_bar(aes(fill=season),stat="identity", position ="dodge") + 
+  theme_bw()+ 
+  theme(axis.text.x = element_text(angle=-40, hjust=.1))
+g1
+
+library(ggplot2)
+library(reshape2)
+shonda <- shondaland %>% select(season_ep, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10)
+d <- melt(shonda, id.vars="season_ep")
+d$value <- as.numeric(as.character(d$value))*10
+
+
+# Everything on the same plot
+ggplot(d, aes(season_ep,value, col=variable, fill=variable)) + 
+  geom_bar(stat="identity") +scale_y_continuous()
+```
+
+#Scandal
+
+##Progressão ao longo do tempo
+Já em Scandal, temos um comportamento diferente: A primeira temporada apresenta um progressão linear positiva ao longo da temporada, já na segunda, terceira e quarta temporada temos essa progressão no final da temporada (a partir do episódio 15).
+## Maiores Notas
+Nas três primeiras temporadas, o ultimo episódio sempre tem a maior avaliação. A partir da quarta temporada, a maior avaliação aparece arbitrariamente ao longo da tempodada (episódio 6, episódio 4 e 17), já na sexta temporada, o primeiro episódio é um dos que apresente maior média.
+```{r}
+scandal = shondaland %>% filter(series_name %in% c("Scandal"))
+ggplot(data=scandal, aes(x=season_ep, y=user_rating, group=series_name, color=series_name)) +
+    geom_line()+
+    geom_point() +
+    facet_wrap(~ season)
+```
+
+
+#Comparação
+## Episódios irregulares
+Os episódios apresentam uma variação maior na média em Scandal do que em How To Get Away With Murder. Enquanto as médias dos episódios de How To Get Away variam entre 8.2 e 9.4, as notas em Scandal chegam a variar de 8.4 a 6.4 na sexta temporada.
+
