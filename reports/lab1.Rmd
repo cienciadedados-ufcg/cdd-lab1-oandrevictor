@@ -82,12 +82,10 @@ htgawm_nah <- shonda_nah %>% filter(series_name %in% c("How to Get Away with Mur
 
 ggplot(htgawm_nah, aes(season_ep, nah, col=season, fill=season)) + 
         geom_bar(width=0.4, stat="identity") +
-        geom_text(aes(label=sprintf("%0.2f", round(nah, digits = 2))),hjust=0.5, vjust=-0.5, size= 3) +
+        geom_text(data=subset(htgawm_nah, nah > 20| nah <5), aes(label=sprintf("%0.2f", round(nah, digits = 2))),hjust=0.5, vjust=-0.5, size= 3) +
         theme(text = element_text(size = 10)) + 
         theme(axis.text = element_text(size = 10)) +  theme(axis.title = element_text(size = 20)) +
         facet_grid( ~ season) 
-    
-
 ```
 
 #Scandal
@@ -109,11 +107,10 @@ scandal_nah <- shonda_nah %>% filter(series_name %in% c("Scandal"))
 
 ggplot(scandal_nah, aes(season_ep, nah, col=season, fill=season)) + 
         geom_bar(width=0.4, stat="identity", position=position_dodge(.3)) +
-        geom_text(aes(label=sprintf("%0.2f", round(nah, digits = 2))),hjust=0.5, vjust=-0.5, size= 3) +
+        geom_text(data=subset(scandal_nah, nah > 30), aes(label=sprintf("%0.2f", round(nah, digits = 2))),hjust=0.5, vjust=-0.5, size= 3) +
         theme(text = element_text(size = 10)) + 
         theme(axis.text = element_text(size = 10)) +  theme(axis.title = element_text(size = 20)) +
         facet_grid( ~ season) 
-    
 ```
 
 #Comparação
