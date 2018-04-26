@@ -78,11 +78,11 @@ ggplot(data=htgawm, aes(x=season_ep, y=user_rating, group=series_name, color=ser
 ```{r}
 shonda_nah <- shondaland %>% 
                 mutate(nah = r4*100 + r5*100 + r6*100 + r7 *100)
-scandal_nah <- shonda_nah %>% filter(series_name %in% c("How to Get Away with Murder"))
+htgawm_nah <- shonda_nah %>% filter(series_name %in% c("How to Get Away with Murder"))
 
-ggplot(scandal_nah, aes(season_ep, nah, col=season, fill=season)) + 
+ggplot(htgawm_nah, aes(season_ep, nah, col=season, fill=season)) + 
         geom_bar(width=0.4, stat="identity") +
-        geom_text(aes(label=sprintf("%0.2f", round(nah, digits = 2))),hjust=0.5, vjust=-0.5, size= 3,  color="#000000") +
+        geom_text(aes(label=sprintf("%0.2f", round(nah, digits = 2))),hjust=0.5, vjust=-0.5, size= 3) +
         theme(text = element_text(size = 10)) + 
         theme(axis.text = element_text(size = 10)) +  theme(axis.title = element_text(size = 20)) +
         facet_grid( ~ season) 
@@ -104,6 +104,17 @@ ggplot(data=scandal, aes(x=season_ep, y=user_rating, group=series_name, color=se
     facet_wrap(~ season)
 ```
 
+```{r}
+scandal_nah <- shonda_nah %>% filter(series_name %in% c("Scandal"))
+
+ggplot(scandal_nah, aes(season_ep, nah, col=season, fill=season)) + 
+        geom_bar(width=0.4, stat="identity", position=position_dodge(.3)) +
+        geom_text(aes(label=sprintf("%0.2f", round(nah, digits = 2))),hjust=0.5, vjust=-0.5, size= 3) +
+        theme(text = element_text(size = 10)) + 
+        theme(axis.text = element_text(size = 10)) +  theme(axis.title = element_text(size = 20)) +
+        facet_grid( ~ season) 
+    
+```
 
 #Comparação
 ## Episódios irregulares
