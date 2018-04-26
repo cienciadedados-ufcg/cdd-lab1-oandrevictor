@@ -1,5 +1,5 @@
 ---
-title: "Lab1"
+title: "Lab 1: Séries de TV"
 author: "André Victor de Andrade Lopes"
 date: "23 de abril de 2018"
 output:
@@ -7,12 +7,20 @@ output:
     code_folding: hide
     theme: flatly
     toc: yes
-    toc_depth: 2
+    toc_depth: 3
     toc_float: yes
 ---
+<link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+
 <style type="text/css">
+body {
+    font-family: "Roboto", sans-serif;
+}
 body, td {
    font-size: 14px;
+}
+h1, h2, h3 {
+    font-weight: bold;
 }
 code.r{
   font-size: 11px;
@@ -21,11 +29,12 @@ code.r{
 ```{r setup, include=FALSE, echo=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_chunk$set(comment=NA, fig.width=8, fig.align='center', fig.env='marginfigure')
-
 library(tidyverse)
 library(here)
 library(ggplot2)
 library(ggtech)
+require(gridExtra)
+
 
 theme_set(theme_bw())
 theme_update(plot.title = element_text(hjust = 0.5))
@@ -51,11 +60,14 @@ series_ = dados %>%
 
 ```
 
-##Shondaland
-
-Shondaland é uma produtora americana que é responsável pelas séries Grey's Anatomy, Scandal, How To Get Away With Murder e outras. As três séries são exibidas no canal aberto ABC no mesmo dia da semana (Quinta-Feira) a noite. A análise será feita levando em consideração a avaliçaõ de duas das principais séries da Shondaland: Scandal e How To Get Away With Murder.
+#Shondaland
+<center>
+![image1](shondaland.png)
+</center> <br/>
+Shondaland é uma produtora americana que é responsável pelas séries Grey's Anatomy, Scandal, How To Get Away With Murder e outras. As três séries são exibidas no canal aberto ABC no mesmo dia da semana (Quinta-Feira) a noite. A análise será feita levando em consideração a avalição de duas das principais séries da Shondaland: <b>Scandal</b> e <b>How To Get Away With Murder</b>.
 
 ```{r pressure, echo=FALSE}
+
 shondaland <- dados %>% filter(series_name %in% c("How to Get Away with Murder", "Scandal"))
 
 basic_statistic <- dados %>%
@@ -68,12 +80,12 @@ basic_statistic <- dados %>%
 
 ```
 
-#How To Get Away With Murder
-Primeiro vamos analisar How To Get Away With Murder. O gráfico de linhas abaixo nos ajuda a compreender como a série se comporta de forma parecida nas três temporadas: Na primeira parte da série (que é exibida entre setembro e dezembro) os episódios apresentam uma média de avalição que varia entre 8 e 9, até chegar no mid-season (episódio 9) que é o episódio com a maior média na temporada.
-O Mid-season é o episódio que divide o plot da história. Nele, acontecem algumas revelações sobre os mistérios que foram apresentados na série até o momento, também é onde é apresentado o gancho para a segunda parte da temporada. Depois disso, os episódios da temporada voltam a ter uma média mais baixa que segue um progressão positiva tendo o seu segundo pico na season finale (episódio do final da temporada).
-Considerando: Primeiro episódio, Meio e final da temporada, temos:
-#1: Meio (9.4, 9.6, 9.6)
-#2 final (9.4, 9.2, 9.1)
+##How To Get Away With Murder
+<center>
+![image2](htgawm.png)
+</center>
+###Onde estão os melhores episódios? Inicio meio ou fim da temporada?
+Primeiro vamos analisar How To Get Away With Murder. O gráfico de linhas abaixo nos ajuda a compreender como a avaliação dos episódios série se comporta de forma parecida nas três temporadas.
 ```{r}
 htgawm = shondaland %>% 
     filter(series_name %in% c("How to Get Away with Murder"))
@@ -95,11 +107,19 @@ ggplot(data=htgawm,
     ggtitle("Avaliação do episódio por temporada")
 
 ```
+Na primeira parte da série (que é exibida entre setembro e dezembro) os episódios apresentam uma média de avalição que varia entre 8 e 9, até chegar no mid-season (episódio 9) que é o episódio com a maior média na temporada. <br/>
+O Mid-season é o episódio que divide o plot da história. Nele, acontecem algumas revelações sobre os mistérios que foram apresentados na série até o momento, também é onde é apresentado o gancho para a segunda parte da temporada. Depois disso, os episódios da temporada voltam a ter uma média mais baixa que segue um progressão positiva tendo o seu segundo pico na season finale (episódio do final da temporada). <br />
+Embora sua tradução seja "Meio de temporada", o "mid-season" não é necessariamente o episódio que numericamente divide a temporada. <br />
+Considerando: Primeiro episódio, Meio e final da temporada, temos: <br/>
+#1: Meio (9.4, 9.6, 9.6) <br />
+#2: final (9.4, 9.2, 9.1) <br />
+Assim, para How to Get Away with Murder os melhores episódios são os <b>mid-season</b>.
 
-#Scandal
-Já em Scandal, temos um comportamento diferente: A primeira temporada apresenta um progressão linear positiva ao longo da temporada, já na segunda, terceira e quarta temporada temos essa progressão apenas no final da temporada (a partir do episódio 15).
-Nas três primeiras temporadas, o ultimo episódio sempre tem a maior avaliação. A partir da quarta temporada, a maior avaliação aparece arbitrariamente ao longo da tempodada (episódio 6, episódio 4 e 17), já na sexta temporada, o primeiro episódio é um dos que apresente maior média.
-
+##Scandal
+<center>
+![image2](scandal.png)
+</center>
+Já em Scandal, temos um comportamento diferente:
 ```{r}
 scandal = shondaland %>% filter(series_name %in% c("Scandal"))
 ggplot(data=scandal, aes(x=season_ep, y=user_rating, group=series_name, color=series_name)) +
@@ -109,13 +129,16 @@ ggplot(data=scandal, aes(x=season_ep, y=user_rating, group=series_name, color=se
 
 basic_statistic = shondaland %>%
     group_by(season, series_name) %>%
-    summarize(variance = var(user_rating), max =max(user_rating), min = min(user_rating), mean = mean(user_rating), sd = sd(user_rating))
+    summarize(variance = var(user_rating), max =max(user_rating), min = min(user_rating), average = mean(user_rating), sd = sd(user_rating))
 
 ```
+###Onde estão os melhores episódios? Inicio meio ou fim da temporada?
+A primeira temporada apresenta um progressão linear positiva ao longo da temporada, já na segunda, terceira e quarta temporada temos essa progressão apenas no final da temporada (a partir do episódio 15). <br />
+Nas três primeiras temporadas, o ultimo episódio sempre tem a maior avaliação. A partir da quarta temporada, a maior avaliação aparece arbitrariamente ao longo da tempodada (episódio 6, episódio 4 e 17), já na sexta temporada, o primeiro episódio é um dos que apresente maior média.
 
-#Qual das duas séries tem episódios de qualidade mais irregular segundo o IMDB? 
-Após analisar os gráficos acima, podemos decidir que Scandal é a série com maior irregularidade nas avaliações dos episódios, principalmente nas duas ultimas temporadas.
-Podemos mostrar isso com a ajuda de valores estatísticos como a variancia e desvião padrão, que nos ajudam a compreender quão grande é a diferença desses valores da média esperada.
+##Qual das duas séries tem episódios de qualidade mais irregular segundo o IMDB? 
+Após analisar os gráficos acima, podemos decidir que <b>Scandal</b> é a série com maior irregularidade nas avaliações dos episódios, principalmente nas duas ultimas temporadas.
+Podemos mostrar isso com a ajuda de valores estatísticos como a variancia e desvião padrão, esses valores nos ajudam a compreender quão grande é a diferença dos valores reais relação a média esperada.
 ```{r}
 shondaland_variance = ggplot(data=basic_statistic,
                              aes(x=season,
@@ -140,57 +163,112 @@ shondaland_sd = ggplot(data=basic_statistic,
          y = "Desvio Padrão",
          color = "Série") +
     ggtitle("Desvio padrão na nota dos episódios por temporada")
-shondaland_variance
-shondaland_sd
+grid.arrange(shondaland_variance, shondaland_sd)
 ```
-Embora ambos os valores sejam pequenos, a variância no caso de Scandal é maior.
+Embora ambos os valores sejam pequenos, a variância no caso de <b>Scandal</b> é maior.
+Além disso, os episódios de Scandal apresentam uma diferença maior entre a nota do melhor episódio da temporada e a do pior episódio em relação a How To Get Away With Murder. Enquanto as notas dos episódios de How To Get Away variam entre 8.2 e 9.4, as notas em Scandal chegam a variar de 8.4 a 6.4 na sexta temporada.
 
-#Qual série é mais bem avaliada?
+##Qual série é mais bem avaliada?
 Para isso vamos dar uma olhada na distribuição das notas das séries com a ajuda de um box-plot:
 ```{r}
-boxplot_shondaland <- ggplot(shondaland, aes(x = series_name, y = user_rating, color= series_name)) +
-        geom_boxplot() + geom_jitter(position = position_jitter(w = 0.4, h = 0)) + scale_color_manual(values=c("#ef6a65", "#93d2c7"))
+boxplot_shondaland <- ggplot(shondaland,
+                             aes(x = series_name,
+                                 y = user_rating,
+                                 color= series_name)) +
+    geom_boxplot() +
+    geom_jitter(position = position_jitter(w = 0.4,
+                                           h = 0)) + 
+    guides(color=FALSE)  + 
+    labs(x = "Série",
+         y = "Avaliação dos usuários") +
+    ggtitle("Distribuição das avaliações dos episódios para cada série")
 boxplot_shondaland
 ```
+Com a ajuda do boxplot podemos ver que as notas de How To Get Away With Murder são significativamente maiores que as de Scandal. Enquanto 75% das notas de How To Get Away With Murder estão acima de 8.5, 75% das notas de Scandal estão abaixo desse valor. 
+Além disso, embora a média de ambas as séries estejam diminuindo, a média de Scandal, mesmo eu seu pico, é menor do que a menor média atingida por How To Get Away With Murder. <br />
+<i> Side note: Curiosamente, ambas as séries tem a melhor média na segunda temporada </i> 
+```{r}
+shodaland_mean = ggplot(data=basic_statistic,
+                             aes(x=season,
+                                 y=average,
+                                 group=series_name,
+                                 color=series_name)) +
+    geom_line() +
+    geom_point() +
+    labs(x = "Temporada",
+         y = "Média de avaliação",
+         color = "Série") +
+    ggtitle("Média nota dos episódios por temporada")
+shodaland_mean
+```
+Porém essa diferença não é muito grande, nem quer dizer que Scandal seja mal avaliada. Aliás, a média de avaliação de Scandal continua perto de 8 (Na sexta temporada, a média chegou próxima a 7.75).
 
-
-#Episódios Sem Graça
+##E os episódios sem graça?
+Alguns episódios, como diriam o dito popular <i> "Nem fede, nem cheira" </i>, ou seja, não são nem bons, nem ruins. São medianos, "okay"", preechem o tempo sem oferecer nenhum sentimento muito forte (de amor ou odio). Para a analise, esses episódios são aqueles que foram classificados entre 4 e 7 pelos usuários.  <br />
+Para isso, foi criada uma variável "nah" que é a o valor de r4, r5, r6, r7 <i>(onde, cada rx significa: proporção de usuários que avaliaram o episódio com nota x)</i> multiplicado por 100 (Para montarmos o gráfico considerando a porcentagem).
 ```{r}
 shonda_nah <- shondaland %>% 
                 mutate(nah = r4*100 + r5*100 + r6*100 + r7 *100)
+```
+
+### How To Get Away With Murder
+```{r}
 htgawm_nah <- shonda_nah %>% filter(series_name %in% c("How to Get Away with Murder"))
 
-ggplot(htgawm_nah, aes(season_ep, nah, col=season, fill=season)) + 
-        geom_bar(width=0.4, stat="identity") +
-        geom_text(data=subset(htgawm_nah, nah > 20| nah <5), aes(label=sprintf("%0.2f", round(nah, digits = 2))),hjust=0.5, vjust=-0.5, size= 3) +
-        theme(text = element_text(size = 10)) + 
-        theme(axis.text = element_text(size = 10)) +  theme(axis.title = element_text(size = 20)) +
-        facet_grid( ~ season)
+ggplot(htgawm_nah,
+       aes(season_ep,
+           nah,
+           fill=nah)) + 
+        geom_bar(width=0.4,
+                 stat="identity") +
+        geom_text(data=subset(htgawm_nah,
+                              nah > 20| nah <5),
+                  aes(label=sprintf("%0.2f",
+                                    round(nah, digits = 2))),
+                  hjust=0.5,
+                  vjust=-0.5,
+                  size= 3) +
+    theme(text = element_text(size = 10)) + 
+    theme(axis.text = element_text(size = 10)) + 
+    theme(legend.position="bottom") +
+    scale_fill_gradient(low="blue", high="red") +
+    facet_grid( ~ season) +
+    labs(x = "Episódio",
+         y = "% de usuários que nem amaram nem odiaram o episódio",
+         fill = "% de pessoas que acharam a série sem graça") +
+    ggtitle("% de pessoas que acham o episódio sem graça para cada temporada")
 ```
+Em How To Get Away With Murder, apenas um episódio de cada temporada é considerado sem graça por mais de 20% dos usuários. Nas duas primeiras temporadas, esse episódio ocorreu antes do meio da temporada. 
 
-```{r}
-
-```
-
+### Scandal
 ```{r}
 scandal_nah <- shonda_nah %>% filter(series_name %in% c("Scandal"))
 
-ggplot(scandal_nah, aes(season_ep, nah, col=season, fill=season)) + 
-        geom_bar(width=0.4, stat="identity", position=position_dodge(.3)) +
-        geom_text(data=subset(scandal_nah, nah > 30), aes(label=sprintf("%0.2f", round(nah, digits = 2))),hjust=0.5, vjust=-0.5, size= 3) +
-        theme(text = element_text(size = 10)) + 
-        theme(axis.text = element_text(size = 10)) +  theme(axis.title = element_text(size = 20)) +
-        facet_grid( ~ season) 
+ggplot(scandal_nah, aes(season_ep,
+                        nah,
+                        fill = nah)) + 
+        geom_bar(width = 0.8,
+                 stat = "identity",
+                 position = position_dodge(.3)) +
+        geom_text(data=subset(scandal_nah,
+                              nah > 20),
+                  aes(label = sprintf("%0.2f",
+                                    round(nah, digits = 2))),
+                  hjust=0.5,
+                  vjust=-0.5,
+                  size= 3) +
+    theme(text = element_text(size = 10)) + 
+    theme(axis.text = element_text(size = 10)) +
+    scale_fill_gradient(low="blue", high="red") +
+    theme(legend.position="bottom") +
+    facet_grid( ~ season) +
+    labs(x = "Episódio",
+         y = "% de usuários que nem amaram nem odiaram o episódio",
+         fill = "% de pessoas que acharam a série sem graça") +
+    ggtitle("% de pessoas que acham o episódio sem graça para cada temporada")
 ```
-
-#Comparação
-## Episódios irregulares
-Os episódios apresentam uma variação maior na média em Scandal do que em How To Get Away With Murder. Enquanto as médias dos episódios de How To Get Away variam entre 8.2 e 9.4, as notas em Scandal chegam a variar de 8.4 a 6.4 na sexta temporada.
-
-```{r}
+A segunda temporada de Scandal não tem nenhum episódio onde mais de 20% dos usuários tenham classificado o episódio como sem graça. Já na quinta e sexta temporada, existe mais de 10 episódios sem graça. Mais que isso, na primeira, quinta e sexta temporada, existem episódios onde mais de 30% dos usuários acham o episódio sem graça. Assim, <b> Scandal </b> é, entre as duas séries, a série com mais episódios sem graça.<br/>
 
 
-
-```
 
 
