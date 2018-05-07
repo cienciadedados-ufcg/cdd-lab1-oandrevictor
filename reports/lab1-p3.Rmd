@@ -1,0 +1,318 @@
+---
+title: "Lab 1: Séries de TV"
+author: "André Victor de Andrade Lopes"
+date: "6 de maio de 2018"
+output:
+  html_document:
+    code_folding: hide
+    theme: flatly
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+---
+<link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+
+<style type="text/css">
+body {
+    font-family: "Roboto", sans-serif;
+}
+body, td {
+   font-size: 14px;
+}
+h1, h2, h3 {
+    font-weight: bold;
+}
+code.r{
+  font-size: 11px;
+}
+</style>
+```{r setup, include=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(comment=NA, fig.width=8, fig.align='center', fig.env='marginfigure')
+library(tidyverse)
+library(here)
+library(ggplot2)
+library(ggtech)
+library(gridExtra)
+library(grid)
+
+theme_set(theme_bw())
+theme_update(plot.title = element_text(hjust = 0.5))
+theme_update(title = element_text(family = 'Helvetica'))
+```
+
+#Os Dados
+Os dados utilizados foram extraidos do IMDB em Julho de 2017. Eles estão disponíveis em uma tabela csv que também está no repositório (data/series_from_imdb.csv). <br />
+
+Cada linha da tabela é referente a média de avaliação de um episódio de uma série no IMDB dados. Cada linha é composta por: Nome da série, Episódio (em relação ao total da série), Episódio (em relação a temporada), Temporada, URL (link para a pagina do IMDB), Média de avaliação, Total de Votos, e uma sequencia de valores rx, onde 1<=r<=10, rx representando a proporção dos votos com a nota x. 
+No total, há dados sobre 511 séries, totalizando 32.070 episódios.
+
+```{r cars}
+dados = read_csv(here("data/series_from_imdb.csv"), 
+                    progress = FALSE,
+                    col_types = cols(series_name = col_character(), 
+                                     episode = col_character(), 
+                                     url = col_character(),
+                                     season = col_character())) 
+
+series = dados %>%
+           group_by(series_name) %>%
+            summarise(n = n(),
+                      max_user_votes = max(user_votes),
+                      min_user_votes = min(user_votes),
+                      seasons = max(season))
+
+```
+
+#1. Quanto maior o numero de temporadas, maior a média de avalição de uma série?
+Quando uma série dura muito tempo, o que acredita é que apenas as pessoas que realmente gostam da série, continuam assistindo. Mas, isso quer dizer que a média geral da série será mais alta? 
+
+Primeiro agrupamos o conjunto de dados pelo nome da série e juntamos a ele a quantidade de episódios da série, numero de temporadas e a média geral da série (média das avaliações de cada episódio).
+Ou seja, cada ponto do gráfico abaixo é referente a uma série que tem x temporadas cuja média das avaliações é y.
+```{r}
+dados_temporadas = dados %>%
+            group_by(series_name) %>%
+            summarise(n = n(),
+                      seasons = max(season),
+                      mean_rating= mean(user_rating))
+ggplot(dados_temporadas,
+       aes(seasons, 
+           mean_rating,
+           color= mean_rating)) +
+    geom_point(alpha = .6) +
+    labs(x = "Quantidade de temporadas",
+         y = "Média de avaliação da série",
+         color = "Média de avaliação da série")+
+    theme(legend.position="bottom") 
+```
+Como os pontos estão muito juntos, a teoria de uma relação entre a quantidade de temproadas e a média geral fica um pouco dificil de ser elaborada. Embora pareça ter uma correlação positiva até a quinta temporada. Porém vamos tentar ver essa distribuição com um boxplot:
+Em rosa está o valor do primeiro quartil.
+```{r, warning = FALSE}
+primeiro_quartil <- function(x){
+   return(c(y = unname(quantile(x, 0.25)), label = round(unname(quantile(x, 0.25)), digits=2)))
+}
+
+ggplot(dados_temporadas,
+       aes(seasons,
+           mean_rating),
+       color='dodgerblue3') +
+    geom_boxplot() + 
+    stat_summary(fun.data = primeiro_quartil,
+                 geom = "text",
+                 alpha = .7,
+                 color='deeppink3',
+                 aes(hjust=-0.2,
+                     vjust=1.3,
+                     size= 2)) + 
+    labs(x = "Quantidade de temporadas",
+         y = "Média de avaliação da série") + 
+        theme(legend.position="none") 
+
+```
+Com ajuda do boxplot, podemos perceber um comportamento: a posição do primeiro quartil parece subir, até chegar na quinta temporada onde começa a descer. <br />
+A partir de tentativa e erro, estimei uma função para tentar aproximar o valor do primeiro quartil dos valores:  F(x) = -0.03*(x-5)² + 7.85. <br />
+Essa função representa uma parábola com o vertice em (5, 7.85).
+```{r}
+ggplot(dados_temporadas, aes(seasons, mean_rating)) +
+    geom_boxplot() +
+    stat_function(fun = function(x) -0.03*(x - 5)^2  + 7.85,
+                  color="red") + 
+    stat_summary(fun.data = primeiro_quartil, 
+                 geom = "text",
+                 alpha = .7,
+                 color='deeppink3',
+                 aes(hjust=-0.2,
+                     vjust=1.3,
+                     size= 2)) + 
+    labs(x = "Quantidade de temporadas",
+         y = "Média de avaliação da série") + 
+        theme(legend.position="none") 
+
+```
+Se temos que a média geral de cerca de 75% dos programas estão acima do valor da função e ela cresce até x = 5, ou seja, até a quinta temporada, temos que, se a serie dura até 5 temporadas, quanto maior o numero de temporadas, maior a média geral. Porém se a série dura mais que isso, a premissa não é verdadeira. <br *>
+Por tanto, a ideia é que a série tenha uma quantidade de temporadas suficientes para desenvolver a história e os personagens, mas que não se prolongue desnecessariamente. <br/>
+
+Podemos ver os valores estimados da função em comparação com o verdadeiro valor e o erro proporcional da aproximação em relação ao valor real.
+```{r}
+
+dados_temporadas_grouped <- dados_temporadas %>%
+    group_by(seasons) %>%
+    summarise(real= unname(quantile(mean_rating,
+                                    0.25)))
+    
+comparacao <- data.frame(seasons=c(1, 2, 3, 4, 5, 6, 7,8,9))
+comparacao <- transform(comparacao, aproximado = -0.03*(seasons - 5)^2  + 7.85)
+comparacao <- merge(comparacao, dados_temporadas_grouped,by="seasons")
+comparacao <- transform(comparacao, erro_proporcional = round(abs(real-aproximado)/real ,
+                                                              digits= 2))
+
+comparacao
+```
+Embora a função não seja ótima, o erro proporcional dos valores aproximados para com o valor real é bem pequeno. Cheganos a cerca de 3% no pior caso (oitava temporada). 
+
+
+Adicionalmente, podemos ver a correlação linear entre a quantidade de temporadas e média geral.
+```{r}
+dados_temporadas$seasons = as.numeric(dados_temporadas$seasons)
+cor(dados_temporadas$seasons, dados_temporadas$mean_rating);
+
+```
+Como era esperado após a analise dos gráficos, não é possível dizer que existe uma correlação linear forte. Ainda sim, essa correlação, mesmo que fraca, é positiva. 
+
+#2. Séries canceladas na primeira temporada apresentam uma média decrescente ao logo da temporada?
+Para a analise, iremos filtrar os dados para exibir apenas as séries que foram canceladas na primeira temporada. <br />
+Essa informação não está explicita na tabela, porém o link para a página no IMDB esta disponível. A partir do link podemos checar o ano de término da série e informações sobre a série (como por exemplo, o caso de ser uma série limitada onde só há uma temporada). A partir de então, foram selecionadas 10 séries canceladas para serem utilizadas na analise. <br />
+Dividiremos as séries em dois grupos para uma melhor visualização dos gráficos
+```{r}
+canceladas1 = c('How To Live With Your Parents', 'Jane By Design', 'Limitless', 'Selfie', 'Shit My Dad Says')
+canceladas2 = c('State Of Georgia', 'Terra Nova','The New Normal', 'The Secret Circle', 'Zero Hour')
+dados_canceladas1 <- dados %>% 
+    filter(series_name %in% canceladas1) 
+dados_canceladas2 <- dados %>% 
+    filter(series_name %in% canceladas2) 
+dados_canceladas = rbind(dados_canceladas1, dados_canceladas2)
+
+ggplot(dados_canceladas1,
+       aes(x = series_ep,
+           y= user_rating,
+           color=series_name)) +
+        geom_line() + 
+    labs(x = "Episódio",
+         y = "Avaliação do episódio",
+         color = "Série") + 
+        theme(legend.position="bottom") 
+
+ggplot(dados_canceladas2,
+       aes(x = series_ep,
+           y = user_rating,
+           color=series_name)) +
+        geom_line() + 
+    labs(x = "Episódio",
+         y = "Avaliação do episódio",
+         color = "Série") + 
+        theme(legend.position="bottom") 
+
+
+```
+Com a ajuda dos gráficos, podemos ver que embora haja uma variação nas notas durante a temporada, normalmente, os episódios finais apresentam uma avaliação próxima da mediana das notas das temporadas.
+
+Vamos dar uma olhada nos ultimos três eps da temporada e compará-los com a mediana.
+```{r}
+series_canceladas_comparacao<- data.frame(series_name = unique(dados_canceladas1$series_name))
+series_canceladas_comparacao<- rbind(series_canceladas_comparacao, data.frame(series_name = unique(dados_canceladas2$series_name)))
+
+dados_canceladas_grouped <- dados_canceladas %>%
+    group_by(series_name) %>%
+    summarise(ultimo_ep = n(),
+              mediana = mean(user_rating))
+getEpisodesRatings <- function(eps, names){
+    result = c();
+    for(index in 1:length(eps)){
+        result = c(result, subset(dados_canceladas$user_rating, dados_canceladas$series_ep == eps[index] & dados_canceladas$series_name == names[index]));
+    }
+    return(result);
+}
+
+dados_canceladas_grouped <- transform(dados_canceladas_grouped, antepenultimo_episodio = getEpisodesRatings(ultimo_ep-2 ,series_name))
+dados_canceladas_grouped <- transform(dados_canceladas_grouped, penultimo_episodio = getEpisodesRatings(ultimo_ep-1 ,series_name))
+dados_canceladas_grouped <- transform(dados_canceladas_grouped, ultimo_episodio = getEpisodesRatings(ultimo_ep ,series_name))
+dados_canceladas_grouped
+
+```
+Assim, embora outros fatores possam estar relacionado com o cancelamento dessas séries (Como a audiência), as notas dadas aos episódios no IMDB não parecem não indicar um cancelamento da série.
+Uma discussão que abre é, será que embora essas notas condizentes com a mediana, a quantidade de avaliações diminuiu com o passar da temporada?
+
+#3.Séries canceladas na primeira temporada apresentam uma queda na quantidade de avaliações dos episódios durante a temporada?
+
+Como analisamos acima, as notas parecem não estar relacionadas com o cancelamento da série. Porém, será que a quantidade de avaliação dessas séries caem muito ao longo da temporada?
+```{r}
+ggplot(dados_canceladas1,
+       aes(x = series_ep,
+           y = user_votes,
+           color = series_name)) +
+        geom_line() + 
+    labs(x = "Episódio",
+         y = "Quantidade de avaliações para o episódio",
+         color = "Série") + 
+        theme(legend.position="bottom") 
+
+ggplot(dados_canceladas2,
+       aes(x = series_ep,
+           y = user_votes,
+           color=series_name)) +
+        geom_line() + 
+    labs(x = "Episódio",
+         y = "Quantidade de avaliações para o episódio",
+         color = "Série") + 
+        theme(legend.position="bottom") 
+
+```
+Em relação ao primeiro episódio , em quase todas as séries (exceto Jane by Design e The New Normal), a quantidade de avaliações cai. Em alguns casos, essa queda é sutil, mas em outro ela é brusca, como no caso de Limitless que teve mais de 1.500 avaliações no primeiro episódio, porém no quinto episódio essa quantidade ja estava abaixo de 1000.
+
+Agora, vamos agrupar todas as séries e obter o valor máximo / minimo e a diferença proporcional entre esses valores. (Para as séries não canceladas, iremos analisar apenas a primeira temporada).
+```{r}
+series_primeira_temp = dados %>%
+    filter(season == 1) %>%
+           group_by(series_name) %>%
+            summarise(n = n(),
+                      max_user_votes = max(user_votes),
+                      min_user_votes = min(user_votes),
+                      season = max(season))
+series_primeira_temp = transform(series_primeira_temp,
+                                 diferenca = (max_user_votes - min_user_votes) / max_user_votes)
+
+dados_canceladas_votes <- dados_canceladas %>%
+    group_by(series_name) %>%
+        summarise(max_user_votes = max(user_votes),
+                  min_user_votes = min(user_votes),
+                  season = max(season))
+dados_canceladas_votes  = transform(dados_canceladas_votes,
+                                 diferenca = (max_user_votes - min_user_votes) / max_user_votes)
+
+```
+
+Abaixo vamos calcular a média e a mediana da variação entre o episódio dom maior quantidade de votos e menor quantidade para os dois grupos (Todas as séries, séries canceladas).
+```{r}
+str = paste("Séries canceladas \nMedia de variação maior quantidade de votos - menor quantidade de votos: ",
+            mean(dados_canceladas_votes$diferenca),
+            "\nMediana de variação maior quantidade de votos - menor quantidade de votos: ",
+            median(dados_canceladas_votes$diferenca),
+            '\n---\n',
+            "Todas as séries - Primeira temporada \n",
+            "Media de variação maior quantidade de votos - menor quantidade de votos: ",
+            mean(series_primeira_temp$diferenca),
+            "\nMediana de variação maior quantidade de votos - menor quantidade de votos: ",
+            median(series_primeira_temp$diferenca)
+            ,sep = "")
+cat(str)
+```
+Como podemos ver, a média e a mediana são maiores para para as séries que são canceladas. Então, uma queda na quantidade de votos nos episódios da série pode ser um indicador de que a série será (ou já foi) cancelada. 
+
+#4. As séries que possuem episódios com nota alta são também as séries mais bem avaliadas?
+Primeiros vamos obter os episódios que contem a nota máxima para o conjunto de dados. Ao ordenarmos os dados, vemos que 11 apresentam 9.9.
+```{r}
+dados[order(-dados$user_rating),][1:11,] %>%
+    select(series_name, series_ep, user_rating)
+```
+A nota máxima foi atribuída a 4 episódios de Game of Thrones, 3 episódios de Breaking Bad, 2 episódios de Person of Interest, e 1 episódio de Arrow e Hannibal. Para selecionar as 5 séries mais bem avaliadas do conjunto, serão calculadas as médias de avaliação.
+```{r}
+medias_series = dados %>% 
+    group_by(series_name) %>%
+    summarise(media = mean(user_rating),
+              maximo = max(user_rating))
+medias_series[order(-medias_series$media),][1:5,]
+
+```
+Entre as 5 séries com maior média de avaliação, temos Person of Interest e Game of Thrones que apresentam episódios com nota máxima. Se nos restringissemos apenas a esses dados, não teriamos como comprovar uma correlação entre os valores. Porém podemos explorar melhor todo o conjunto de dados e fazer um gráfico com todas as séries levando em consideração a maior nota obtida e a média de avaliação para a série.
+```{r}
+ggplot(medias_series,
+       aes(x = maximo,
+           y = media,
+           color=media)) +
+        geom_point() + 
+    labs(x = "Maior nota dada a um episódio da série",
+         y = "Média de avaliação da série",
+         color = "Media da série") + 
+        theme(legend.position="bottom") 
+```
+O gráfico nos ajuda a compreender que existe sim uma correlação entre esses valores. E sim, as séries que contem episódios com notas maiores provavelmente são as séries mais bem avaliadas.
