@@ -42,7 +42,7 @@ theme_update(title = element_text(family = 'Helvetica'))
 ```
 
 #Preparando os Dados
-A primeira parte foi construir um data frame com os dados que foram obtidos e estão disponíveis em csv (data/series_from_imdb.csv). <br />
+A primeira parte foi construir um data frame com os dados que foram obtidos do [IMDB](http://www.imbd.com/). <br />
 Em seguida foram extraidos os nomes das séries e quantidade de episódios cujos dados estão disponíveis.
 
 ```{r cars}
@@ -64,6 +64,9 @@ series_ = dados %>%
 <center>
 ![image1](shondaland.png)
 </center> <br/>
+
+>> Não vejo problema nenhum em usar as tags de html pra formatar teu relatório, mas tenta usar as opções do markdown sempre que possível; por exemplo: ao invés de <b>Texto em negrito</b> usar  \**Texto em negrito\**
+
 Shondaland é uma produtora americana que é responsável pelas séries Grey's Anatomy, Scandal, How To Get Away With Murder e outras. As três séries são exibidas no canal aberto ABC no mesmo dia da semana (Quinta-Feira) a noite. A análise será feita levando em consideração a avalição de duas das principais séries da Shondaland: <b>Scandal</b> e <b>How To Get Away With Murder</b>.
 
 ```{r pressure, echo=FALSE}
@@ -76,8 +79,6 @@ basic_statistic <- dados %>%
                   media = mean(user_rating),
                   maximo = max(user_rating),
                   minimo = min(user_rating))
-
-
 ```
 
 ##How To Get Away With Murder
@@ -121,15 +122,25 @@ Assim, para How to Get Away with Murder os melhores episódios são os <b>mid-se
 </center>
 Já em Scandal, temos um comportamento diferente:
 ```{r}
-scandal = shondaland %>% filter(series_name %in% c("Scandal"))
-ggplot(data=scandal, aes(x=season_ep, y=user_rating, group=series_name, color=series_name)) +
-    geom_line()+
-    geom_point() +
+scandal = shondaland %>% 
+    filter(series_name %in% c("Scandal"))
+
+ggplot(data=scandal, 
+       aes(x=season_ep, 
+           y=user_rating, 
+           group=series_name, 
+           color=series_name)) +
+    geom_line(color = "#00BFC4")+
+    geom_point(color = "#00BFC4") +
     facet_wrap(~ season)
 
 basic_statistic = shondaland %>%
-    group_by(season, series_name) %>%
+    group_by(series_name, season) %>%
     summarize(variance = var(user_rating), max =max(user_rating), min = min(user_rating), average = mean(user_rating), sd = sd(user_rating))
+
+general_statistic <- shondaland %>%
+    group_by(series_name) %>%
+     summarize(variance = var(user_rating), max =max(user_rating), min = min(user_rating), average = mean(user_rating), sd = sd(user_rating))
 
 ```
 ###Onde estão os melhores episódios? Inicio meio ou fim da temporada?
@@ -138,19 +149,15 @@ Nas três primeiras temporadas, o ultimo episódio sempre tem a maior avaliaçã
 
 ##Qual das duas séries tem episódios de qualidade mais irregular segundo o IMDB? 
 Após analisar os gráficos acima, podemos decidir que <b>Scandal</b> é a série com maior irregularidade nas avaliações dos episódios, principalmente nas duas ultimas temporadas.
-Podemos mostrar isso com a ajuda de valores estatísticos como a variancia e desvião padrão, esses valores nos ajudam a compreender quão grande é a diferença dos valores reais relação a média esperada.
+Podemos mostrar isso com a ajuda de valores estatísticos como a variancia e desvião padrão, esses valores nos ajudam a compreender quão grande é a diferença dos valores reais relação a média esperada. Nesta análise usaremos o desvio padrão.
 ```{r}
-shondaland_variance = ggplot(data=basic_statistic,
-                             aes(x=season,
-                                 y=variance,
-                                 group=series_name,
-                                 color=series_name)) +
-    geom_line() +
-    geom_point()  + 
-    labs(x = "Temporada",
-         y = "Variancia",
+shondaland_sd_general = ggplot(data = general_statistic, 
+                               aes(x = series_name, y = sd, fill = series_name)) +
+    geom_bar(stat = "identity") +
+    labs(x = "",
+         y = "Desvio Padrão",
          color = "Série") +
-    ggtitle("Variancia na nota dos episódios por temporada")
+    ggtitle("Desvio padrão na nota dos episódios")
 
 shondaland_sd = ggplot(data=basic_statistic,
                              aes(x=season,
@@ -163,9 +170,9 @@ shondaland_sd = ggplot(data=basic_statistic,
          y = "Desvio Padrão",
          color = "Série") +
     ggtitle("Desvio padrão na nota dos episódios por temporada")
-grid.arrange(shondaland_variance, shondaland_sd)
+grid.arrange(shondaland_sd_general, shondaland_sd)
 ```
-Embora ambos os valores sejam pequenos, a variância no caso de <b>Scandal</b> é maior.
+Embora ambos os valores sejam pequenos, o desvio padrão no caso de <b>Scandal</b> é maior.
 Além disso, os episódios de Scandal apresentam uma diferença maior entre a nota do melhor episódio da temporada e a do pior episódio em relação a How To Get Away With Murder. Enquanto as notas dos episódios de How To Get Away variam entre 8.2 e 9.4, as notas em Scandal chegam a variar de 8.4 a 6.4 na sexta temporada.
 
 ##Qual série é mais bem avaliada?
