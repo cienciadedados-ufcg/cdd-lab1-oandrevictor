@@ -64,7 +64,7 @@ series = dados %>%
 
 ```
 
-#1. Quanto maior o numero de temporadas, maior a média de avalição de uma série?
+#1. Quanto maior o numero de temporadas, maior a média de avaliação de uma série?
 Quando uma série dura muito tempo, o que acredita é que apenas as pessoas que realmente gostam da série, continuam assistindo. Mas, isso quer dizer que a média geral da série será mais alta? 
 
 Primeiro agrupamos o conjunto de dados pelo nome da série e juntamos a ele a quantidade de episódios da série, numero de temporadas e a média geral da série (média das avaliações de cada episódio).
@@ -316,3 +316,7 @@ ggplot(medias_series,
         theme(legend.position="bottom") 
 ```
 O gráfico nos ajuda a compreender que existe sim uma correlação entre esses valores. E sim, as séries que contem episódios com notas maiores provavelmente são as séries mais bem avaliadas.
+
+#Comentários
+
+  Texto muito bom, parabéns! O raciocínio utilizado para responder foi bem distinto e a maneira que ele foi escrito ajuda muito a assimilar bem o conteúdo produzido. Como sugestão, você poderia explicar um pouco mais alguns conceitos matemáticos/estatísticos, como quartis e correlação. Também notei que a resolução de algumas perguntas não produziram novas perguntas que foram respondidas. Ótimo trabalho!
